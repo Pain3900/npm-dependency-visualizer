@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from registry import npm_dependencies
+
 
 NPM_NAME = r"(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]*"
 TEST_NAME = r"[A-Z]+"
@@ -50,8 +52,15 @@ def parse_args(argv=None):
 
 def main():
     """Запустить приложение."""
-    for key, value in vars(parse_args()).items():
-        print(f"{key}={value}")
+    args = parse_args()
+    if args.test:
+        raise SystemExit("Тестовый репозиторий появится на следующем этапе.")
+    try:
+        dependencies = npm_dependencies(args.repo, args.package)
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"Ошибка реестра: {error}") from None
+    for name, spec in sorted(dependencies.items()):
+        print(f"{name} {spec}")
 
 
 if __name__ == "__main__":
